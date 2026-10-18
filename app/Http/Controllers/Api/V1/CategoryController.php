@@ -71,7 +71,11 @@ class CategoryController extends Controller
         try {
             $category->delete();
         } catch (QueryException $exception) {
-            if ($exception->getCode() === '23000') {
+            $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
+
+            // 23000 is the integrity-constraint state used by MySQL and SQLite.
+            // 23503 is PostgreSQL's foreign-key violation.
+            if (in_array($sqlState, ['23000', '23503'], true)) {
                 return response()->json([
                     'message' => 'This category cannot be deleted while events still use it.',
                 ], 409);
