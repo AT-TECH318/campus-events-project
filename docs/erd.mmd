@@ -1,0 +1,102 @@
+%% Campus Events API — entity relationships
+%% Inspected schema for Laravel 12. MySQL 8 is the application database.
+%%
+%% users.role_id references roles.id. A role cannot be deleted while users have it.
+%% Public registration cannot mass-assign role_id, so new accounts become Student.
+%% events.category_id references categories.id. Delete is restricted while events exist.
+%% events.organizer_id references users.id. An organizer cannot be deleted while they still own events.
+%% event_registrations pairs event_id and user_id. The pair is unique.
+%% Deleting an event or a user removes that person's registrations.
+%% Capacity is checked by locking the event row and counting registrations.
+%% event_images.event_id references events.id and is removed with the event.
+%% The banner is the image with is_banner true. Saving a new banner clears the previous one.
+%% api_logs.user_id is optional. Deleting a user keeps the log and sets user_id to null.
+
+erDiagram
+    roles ||--o{ users : "assigns"
+    users ||--o{ events : "organizes"
+    categories ||--o{ events : "classifies"
+    users ||--o{ event_registrations : "registers"
+    events ||--o{ event_registrations : "accepts"
+    events ||--o{ event_images : "displays"
+    users ||--o{ api_logs : "may generate"
+
+    roles {
+        bigint id PK
+        string name
+        string slug UK
+        string description
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    users {
+        bigint id PK
+        bigint role_id FK
+        string name
+        string email UK
+        string password
+        timestamp email_verified_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    categories {
+        bigint id PK
+        string name UK
+        string slug UK
+        string description
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    events {
+        bigint id PK
+        bigint category_id FK
+        bigint organizer_id FK
+        string title
+        text description
+        string venue
+        date event_date
+        time start_time
+        time end_time
+        int maximum_capacity
+        datetime registration_deadline
+        string status
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    event_registrations {
+        bigint id PK
+        bigint event_id FK
+        bigint user_id FK
+        timestamp registered_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    event_images {
+        bigint id PK
+        bigint event_id FK
+        string disk
+        string path
+        string original_name
+        string mime_type
+        int size_bytes
+        boolean is_banner
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    api_logs {
+        bigint id PK
+        bigint user_id FK
+        string method
+        string path
+        smallint status_code
+        string ip_address
+        text user_agent
+        int duration_ms
+        timestamp created_at
+    }

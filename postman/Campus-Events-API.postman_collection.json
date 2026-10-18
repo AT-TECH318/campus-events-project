@@ -1,0 +1,4014 @@
+{
+  "info": {
+    "name": "Campus Events API – WEB303 Assignment 2",
+    "description": "Versioned Campus Events API. Set demoPassword locally before running. baseUrl starts at http://127.0.0.1:8000/api/v1. The token variable is filled only by a successful login or registration response and is not stored in this file.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000/api/v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "demoPassword",
+      "value": ""
+    },
+    {
+      "key": "organizerEmail",
+      "value": "organizer@campus.test"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@campus.test"
+    },
+    {
+      "key": "futureDate",
+      "value": "2027-06-15"
+    },
+    {
+      "key": "futureDeadline",
+      "value": "2027-06-14 17:00:00"
+    },
+    {
+      "key": "pastDate",
+      "value": "2020-01-15"
+    },
+    {
+      "key": "pastDeadline",
+      "value": "2020-01-14 17:00:00"
+    },
+    {
+      "key": "closedDate",
+      "value": "2027-08-01"
+    },
+    {
+      "key": "closedDeadline",
+      "value": "2020-01-02 17:00:00"
+    },
+    {
+      "key": "runStamp",
+      "value": ""
+    },
+    {
+      "key": "newUserEmail",
+      "value": ""
+    },
+    {
+      "key": "secondUserEmail",
+      "value": ""
+    },
+    {
+      "key": "studentToken",
+      "value": ""
+    },
+    {
+      "key": "secondStudentToken",
+      "value": ""
+    },
+    {
+      "key": "organizerToken",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "newUserId",
+      "value": ""
+    },
+    {
+      "key": "organizerName",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": ""
+    },
+    {
+      "key": "categorySlug",
+      "value": ""
+    },
+    {
+      "key": "eventId",
+      "value": ""
+    },
+    {
+      "key": "eventTitle",
+      "value": ""
+    },
+    {
+      "key": "pastEventId",
+      "value": ""
+    },
+    {
+      "key": "pastTitle",
+      "value": ""
+    },
+    {
+      "key": "draftEventId",
+      "value": ""
+    },
+    {
+      "key": "draftTitle",
+      "value": ""
+    },
+    {
+      "key": "capacityEventId",
+      "value": ""
+    },
+    {
+      "key": "managedCategoryId",
+      "value": ""
+    },
+    {
+      "key": "blockerEventId",
+      "value": ""
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get('runStamp')) {",
+          "    const stamp = Date.now();",
+          "    pm.collectionVariables.set('runStamp', String(stamp));",
+          "    pm.collectionVariables.set('newUserEmail', 'postman.' + stamp + '@campus.test');",
+          "    pm.collectionVariables.set('secondUserEmail', 'postman.second.' + stamp + '@campus.test');",
+          "    pm.collectionVariables.set('eventTitle', 'Postman Seminar ' + stamp);",
+          "    pm.collectionVariables.set('pastTitle', 'Postman Past ' + stamp);",
+          "    pm.collectionVariables.set('draftTitle', 'Postman Draft ' + stamp);",
+          "    pm.collectionVariables.set('categoryName', 'Postman Category ' + stamp);",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register a student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/register",
+            "description": "Public registration. The API assigns the student role.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Student\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"{{demoPassword}}\",\n  \"password_confirmation\": \"{{demoPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('registration returns a student profile and bearer token', function () {",
+                  "    pm.expect(body.token_type).to.eql('Bearer');",
+                  "    pm.expect(body.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.data.email).to.eql(pm.collectionVariables.get('newUserEmail'));",
+                  "    pm.expect(body.data.role.slug).to.eql('student');",
+                  "    pm.expect(body.data.password).to.be.undefined;",
+                  "});",
+                  "if (pm.response.code === 201 && body.token) {",
+                  "    pm.collectionVariables.set('studentToken', body.token);",
+                  "    pm.collectionVariables.set('token', body.token);",
+                  "    pm.collectionVariables.set('newUserId', String(body.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Registration successful.\",\n  \"token\": \"<issued-on-success>\",\n  \"token_type\": \"Bearer\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Postman Student\",\n    \"email\": \"postman.student@campus.test\",\n    \"role\": { \"id\": 1, \"name\": \"Student\", \"slug\": \"student\" }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register a second student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/register",
+            "description": "Second student used later for the capacity conflict.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Second Student\",\n  \"email\": \"{{secondUserEmail}}\",\n  \"password\": \"{{demoPassword}}\",\n  \"password_confirmation\": \"{{demoPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('second registration returns a bearer token', function () {",
+                  "    pm.expect(body.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.data.role.slug).to.eql('student');",
+                  "});",
+                  "if (pm.response.code === 201 && body.token) {",
+                  "    pm.collectionVariables.set('secondStudentToken', body.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/me",
+            "description": "Authenticated profile for the token captured at registration.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"studentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('profile matches the registered student', function () {",
+                  "    pm.expect(body.data.email).to.eql(pm.collectionVariables.get('newUserEmail'));",
+                  "    pm.expect(body.data.role.slug).to.eql('student');",
+                  "    pm.expect(body.data.password).to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"Postman Student\",\n    \"email\": \"postman.student@campus.test\",\n    \"role\": { \"slug\": \"student\" }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register with missing fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/register",
+            "description": "Validation failure. Does not save a token.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Incomplete\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('missing registration fields are reported and no token is issued', function () {",
+                  "    pm.expect(body.errors).to.have.property('email');",
+                  "    pm.expect(body.errors).to.have.property('password');",
+                  "    pm.expect(body.token).to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "422 Unprocessable",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The email field is required.\",\n  \"errors\": {\n    \"email\": [\"The email field is required.\"],\n    \"password\": [\"The password field is required.\"]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register with a submitted role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/register",
+            "description": "Public registration must reject a submitted role.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Role Grab\",\n  \"email\": \"role.{{runStamp}}@campus.test\",\n  \"password\": \"{{demoPassword}}\",\n  \"password_confirmation\": \"{{demoPassword}}\",\n  \"role\": \"administrator\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('a submitted role is rejected and no token is issued', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.errors).to.have.property('role');",
+                  "    pm.expect(body.token).to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login with the wrong password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/login",
+            "description": "Invalid credentials. Must not replace the saved token.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{organizerEmail}}\",\n  \"password\": \"not-the-demo-password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const tokenBefore = pm.collectionVariables.get('token');",
+                  "pm.test(\"status is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('wrong password returns no token and keeps the previous token', function () {",
+                  "    pm.expect(pm.response.json().token).to.be.undefined;",
+                  "    pm.expect(pm.collectionVariables.get('token')).to.eql(tokenBefore);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"The provided credentials are incorrect.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login as organizer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/login",
+            "description": "Successful organizer login. Saves the token only when the status is 200.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{organizerEmail}}\",\n  \"password\": \"{{demoPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('organizer login returns a bearer token', function () {",
+                  "    pm.expect(body.message).to.eql('Login successful.');",
+                  "    pm.expect(body.token_type).to.eql('Bearer');",
+                  "    pm.expect(body.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.data.email).to.eql(pm.collectionVariables.get('organizerEmail'));",
+                  "    pm.expect(body.data.role.slug).to.eql('organizer');",
+                  "});",
+                  "if (pm.response.code === 200 && body.token) {",
+                  "    pm.collectionVariables.set('organizerToken', body.token);",
+                  "    pm.collectionVariables.set('token', body.token);",
+                  "    pm.collectionVariables.set('organizerName', body.data.name);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Login successful.\",\n  \"token\": \"<issued-on-success>\",\n  \"token_type\": \"Bearer\",\n  \"data\": { \"email\": \"organizer@campus.test\", \"role\": { \"slug\": \"organizer\" } }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login as administrator",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/login",
+            "description": "Successful administrator login. Saves a separate admin token.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{demoPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('administrator login returns a bearer token', function () {",
+                  "    pm.expect(body.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.data.role.slug).to.eql('administrator');",
+                  "});",
+                  "if (pm.response.code === 200 && body.token) {",
+                  "    pm.collectionVariables.set('adminToken', body.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current profile without a token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/me",
+            "description": "Unauthenticated profile request.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('unauthenticated profile names the error', function () {",
+                  "    pm.expect(pm.response.json().message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "401 Unauthorized",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Unauthenticated.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "List events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events?per_page=5",
+            "description": "Public event list with pagination.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('event list has pagination fields', function () {",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "    pm.expect(body.meta.per_page).to.eql(5);",
+                  "    pm.expect(body.meta).to.have.property('current_page');",
+                  "    pm.expect(body.meta).to.have.property('total');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [],\n  \"links\": {},\n  \"meta\": { \"current_page\": 1, \"per_page\": 5, \"total\": 0 }\n}"
+            }
+          ]
+        },
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories?per_page=100",
+            "description": "Public category catalogue. Saves the first category for later event requests.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('category list has data and pagination', function () {",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "    pm.expect(body.meta).to.have.property('total');",
+                  "});",
+                  "if (body.data && body.data.length > 0) {",
+                  "    pm.collectionVariables.set('categoryId', String(body.data[0].id));",
+                  "    pm.collectionVariables.set('categorySlug', body.data[0].slug);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create an event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events",
+            "description": "Organizer creates a published future event.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{eventTitle}}\",\n  \"description\": \"A seminar created by the Postman collection.\",\n  \"category_id\": {{categoryId}},\n  \"venue\": \"Main Hall\",\n  \"event_date\": \"{{futureDate}}\",\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"12:00:00\",\n  \"maximum_capacity\": 25,\n  \"registration_deadline\": \"{{futureDeadline}}\",\n  \"status\": \"published\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('created event echoes the submitted title and venue', function () {",
+                  "    pm.expect(body.data.title).to.eql(pm.collectionVariables.get('eventTitle'));",
+                  "    pm.expect(body.data.venue).to.eql('Main Hall');",
+                  "    pm.expect(body.data.status).to.eql('published');",
+                  "    pm.expect(body.data.id).to.be.a('number');",
+                  "});",
+                  "if (pm.response.code === 201 && body.data) {",
+                  "    pm.collectionVariables.set('eventId', String(body.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": 1,\n    \"title\": \"Postman Seminar\",\n    \"status\": \"published\",\n    \"venue\": \"Main Hall\",\n    \"banner\": null\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get an event",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{eventId}}",
+            "description": "Public event details for the event created in this run.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('event details match the created event', function () {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(String(data.id)).to.eql(pm.collectionVariables.get('eventId'));",
+                  "    pm.expect(data.title).to.eql(pm.collectionVariables.get('eventTitle'));",
+                  "    pm.expect(data.organizer.name).to.eql(pm.collectionVariables.get('organizerName'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get a missing event",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/999999999",
+            "description": "Unknown numeric event id.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('missing event returns a message', function () {",
+                  "    pm.expect(pm.response.json().message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"No query results for model [App\\\\Models\\\\Event] 999999999\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Search events by title",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events?title={{eventTitle}}",
+            "description": "Title search for the event created in this run.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('title search includes the created event', function () {",
+                  "    const titles = pm.response.json().data.map(function (event) { return event.title; });",
+                  "    pm.expect(titles).to.include(pm.collectionVariables.get('eventTitle'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search events by organizer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events?organizer={{organizerName}}&title={{eventTitle}}",
+            "description": "Organizer-name search combined with the created title so the assertion does not depend on page size.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('organizer search includes the created event', function () {",
+                  "    const rows = pm.response.json().data;",
+                  "    const match = rows.find(function (event) { return event.title === pm.collectionVariables.get('eventTitle'); });",
+                  "    pm.expect(match, 'created event').to.be.an('object');",
+                  "    pm.expect(match.organizer.name).to.eql(pm.collectionVariables.get('organizerName'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filter events by category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events?category={{categorySlug}}&title={{eventTitle}}",
+            "description": "Category slug filter for the created event.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('category filter includes the created event', function () {",
+                  "    const rows = pm.response.json().data;",
+                  "    const match = rows.find(function (event) { return event.title === pm.collectionVariables.get('eventTitle'); });",
+                  "    pm.expect(match, 'created event').to.be.an('object');",
+                  "    pm.expect(match.category.slug).to.eql(pm.collectionVariables.get('categorySlug'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filter events by date",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events?date={{futureDate}}&title={{eventTitle}}",
+            "description": "Exact event_date filter.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('date filter returns the created event on that date', function () {",
+                  "    const rows = pm.response.json().data;",
+                  "    pm.expect(rows.length).to.be.above(0);",
+                  "    rows.forEach(function (event) {",
+                  "        pm.expect(event.event_date).to.eql(pm.collectionVariables.get('futureDate'));",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List upcoming events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events?timeframe=upcoming&title={{eventTitle}}",
+            "description": "Upcoming means published and event_date is today or later.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('upcoming results include the future published event', function () {",
+                  "    const titles = pm.response.json().data.map(function (event) { return event.title; });",
+                  "    pm.expect(titles).to.include(pm.collectionVariables.get('eventTitle'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject an unknown timeframe",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events?timeframe=yesterday",
+            "description": "timeframe only accepts upcoming or past.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('unknown timeframe is a validation error', function () {",
+                  "    pm.expect(pm.response.json().errors).to.have.property('timeframe');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create a past event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events",
+            "description": "Create a past event",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{pastTitle}}\",\n  \"description\": \"A past event created by the Postman collection.\",\n  \"category_id\": {{categoryId}},\n  \"venue\": \"Library Lawn\",\n  \"event_date\": \"{{pastDate}}\",\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"12:00:00\",\n  \"maximum_capacity\": 20,\n  \"registration_deadline\": \"{{pastDeadline}}\",\n  \"status\": \"published\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('past event is created', function () {",
+                  "    pm.expect(body.data.title).to.eql(pm.collectionVariables.get('pastTitle'));",
+                  "    pm.expect(body.data.event_date).to.eql(pm.collectionVariables.get('pastDate'));",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('pastEventId', String(body.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List past events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events?timeframe=past&title={{pastTitle}}",
+            "description": "Past means published and event_date is before today.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('past results include the created past event', function () {",
+                  "    const titles = pm.response.json().data.map(function (event) { return event.title; });",
+                  "    pm.expect(titles).to.include(pm.collectionVariables.get('pastTitle'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upcoming query excludes the past event",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events?timeframe=upcoming&title={{pastTitle}}",
+            "description": "Upcoming query excludes the past event",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('upcoming results omit the past event', function () {",
+                  "    const titles = pm.response.json().data.map(function (event) { return event.title; });",
+                  "    pm.expect(titles).to.not.include(pm.collectionVariables.get('pastTitle'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update an event",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{eventId}}",
+            "description": "Partial update.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venue\": \"Library Lawn\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('patch changes only the submitted venue', function () {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(data.venue).to.eql('Library Lawn');",
+                  "    pm.expect(data.title).to.eql(pm.collectionVariables.get('eventTitle'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Replace an event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{eventId}}",
+            "description": "Full replacement. All required event fields are sent.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{eventTitle}}\",\n  \"description\": \"A seminar created by the Postman collection.\",\n  \"category_id\": {{categoryId}},\n  \"venue\": \"Main Hall\",\n  \"event_date\": \"{{futureDate}}\",\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"12:00:00\",\n  \"maximum_capacity\": 25,\n  \"registration_deadline\": \"{{futureDeadline}}\",\n  \"status\": \"published\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('put keeps the submitted event fields', function () {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(data.title).to.eql(pm.collectionVariables.get('eventTitle'));",
+                  "    pm.expect(data.venue).to.eql('Main Hall');",
+                  "    pm.expect(data.maximum_capacity).to.eql(25);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create an event with missing fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events",
+            "description": "Create an event with missing fields",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Incomplete event\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('missing event fields are listed', function () {",
+                  "    const errors = pm.response.json().errors;",
+                  "    ['description', 'category_id', 'venue', 'event_date', 'start_time', 'end_time', 'maximum_capacity', 'registration_deadline', 'status'].forEach(function (field) {",
+                  "        pm.expect(errors, field).to.have.property(field);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create an event with an inconsistent schedule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events",
+            "description": "Create an event with an inconsistent schedule",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Bad schedule {{runStamp}}\",\n  \"description\": \"End time and deadline are inconsistent.\",\n  \"category_id\": {{categoryId}},\n  \"venue\": \"Main Hall\",\n  \"event_date\": \"{{futureDate}}\",\n  \"start_time\": \"12:00:00\",\n  \"end_time\": \"09:00:00\",\n  \"maximum_capacity\": 10,\n  \"registration_deadline\": \"2027-06-15 18:00:00\",\n  \"status\": \"published\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('end time and deadline are rejected', function () {",
+                  "    const errors = pm.response.json().errors;",
+                  "    pm.expect(errors).to.have.property('end_time');",
+                  "    pm.expect(errors).to.have.property('registration_deadline');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create an event as a student",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events",
+            "description": "Students cannot create events.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{eventTitle}}\",\n  \"description\": \"A seminar created by the Postman collection.\",\n  \"category_id\": {{categoryId}},\n  \"venue\": \"Main Hall\",\n  \"event_date\": \"{{futureDate}}\",\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"12:00:00\",\n  \"maximum_capacity\": 25,\n  \"registration_deadline\": \"{{futureDeadline}}\",\n  \"status\": \"published\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"studentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test('student create is forbidden', function () {",
+                  "    pm.expect(pm.response.json().message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "403 Forbidden",
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"This action is unauthorized.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create an event without a token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events",
+            "description": "Create an event without a token",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{eventTitle}}\",\n  \"description\": \"A seminar created by the Postman collection.\",\n  \"category_id\": {{categoryId}},\n  \"venue\": \"Main Hall\",\n  \"event_date\": \"{{futureDate}}\",\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"12:00:00\",\n  \"maximum_capacity\": 25,\n  \"registration_deadline\": \"{{futureDeadline}}\",\n  \"status\": \"published\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Registration",
+      "item": [
+        {
+          "name": "Register for an event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{eventId}}/registrations",
+            "description": "Authenticated student registers once.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"studentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('registration records this user and event', function () {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(String(data.event_id)).to.eql(pm.collectionVariables.get('eventId'));",
+                  "    pm.expect(String(data.user_id)).to.eql(pm.collectionVariables.get('newUserId'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Registration successful.\",\n  \"data\": { \"id\": 1, \"event_id\": 1, \"user_id\": 2 }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Registration history",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/me/registrations?per_page=100",
+            "description": "Registration history",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"studentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('history includes the event just joined', function () {",
+                  "    const ids = pm.response.json().data.map(function (row) { return String(row.event_id); });",
+                  "    pm.expect(ids).to.include(pm.collectionVariables.get('eventId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register twice for the same event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{eventId}}/registrations",
+            "description": "Register twice for the same event",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"studentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('duplicate registration explains the conflict', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.reason).to.eql('already_registered');",
+                  "    pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel a registration",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{eventId}}/registrations",
+            "description": "Cancel a registration",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"studentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('cancellation returns a message', function () {",
+                  "    pm.expect(pm.response.json().message).to.eql('Registration cancelled.');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registration history after cancellation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/me/registrations?per_page=100",
+            "description": "Registration history after cancellation",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"studentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('cancelled event is no longer in the history', function () {",
+                  "    const ids = pm.response.json().data.map(function (row) { return String(row.event_id); });",
+                  "    pm.expect(ids).to.not.include(pm.collectionVariables.get('eventId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel when not registered",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{eventId}}/registrations",
+            "description": "Cancel when not registered",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"studentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('missing registration explains the error', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.reason).to.eql('not_registered');",
+                  "    pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register without a token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{eventId}}/registrations",
+            "description": "Register without a token",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create a one-seat event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events",
+            "description": "Create a one-seat event",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Capacity {{runStamp}}\",\n  \"description\": \"Capacity check event.\",\n  \"category_id\": {{categoryId}},\n  \"venue\": \"Main Hall\",\n  \"event_date\": \"{{futureDate}}\",\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"11:00:00\",\n  \"maximum_capacity\": 1,\n  \"registration_deadline\": \"{{futureDeadline}}\",\n  \"status\": \"published\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('one-seat event is created', function () {",
+                  "    pm.expect(body.data.maximum_capacity).to.eql(1);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('capacityEventId', String(body.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Take the only seat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{capacityEventId}}/registrations",
+            "description": "Take the only seat",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"studentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('first student takes the only seat', function () {",
+                  "    pm.expect(String(pm.response.json().data.event_id)).to.eql(pm.collectionVariables.get('capacityEventId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register when the event is full",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{capacityEventId}}/registrations",
+            "description": "Register when the event is full",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"secondStudentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('full event reports at_capacity', function () {",
+                  "    pm.expect(pm.response.json().reason).to.eql('at_capacity');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create a draft event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events",
+            "description": "Create a draft event",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"{{draftTitle}}\",\n  \"description\": \"Draft event.\",\n  \"category_id\": {{categoryId}},\n  \"venue\": \"Main Hall\",\n  \"event_date\": \"{{futureDate}}\",\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"11:00:00\",\n  \"maximum_capacity\": 10,\n  \"registration_deadline\": \"{{futureDeadline}}\",\n  \"status\": \"draft\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('draftEventId', String(body.data.id));",
+                  "}",
+                  "pm.test('draft event is stored as draft', function () {",
+                  "    pm.expect(body.data.status).to.eql('draft');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register for a draft event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{draftEventId}}/registrations",
+            "description": "Register for a draft event",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"studentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('draft registration is not open', function () {",
+                  "    pm.expect(pm.response.json().reason).to.eql('not_open');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create an event with a passed deadline",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events",
+            "description": "Create an event with a passed deadline",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Closed {{runStamp}}\",\n  \"description\": \"Deadline has passed.\",\n  \"category_id\": {{categoryId}},\n  \"venue\": \"Main Hall\",\n  \"event_date\": \"{{closedDate}}\",\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"11:00:00\",\n  \"maximum_capacity\": 10,\n  \"registration_deadline\": \"{{closedDeadline}}\",\n  \"status\": \"published\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('closedEventId', String(body.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register after the deadline",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{closedEventId}}/registrations",
+            "description": "Register after the deadline",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"secondStudentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('passed deadline is reported', function () {",
+                  "    pm.expect(pm.response.json().reason).to.eql('deadline_passed');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get a category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories/{{categoryId}}",
+            "description": "Get a category",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('category details match the saved category', function () {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(String(data.id)).to.eql(pm.collectionVariables.get('categoryId'));",
+                  "    pm.expect(data.slug).to.eql(pm.collectionVariables.get('categorySlug'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get a missing category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories/999999999",
+            "description": "Get a missing category",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create a category as an organizer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories",
+            "description": "Create a category as an organizer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Organizer Category {{runStamp}}\",\n  \"description\": \"Should be forbidden\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create a category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories",
+            "description": "Create a category",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{categoryName}}\",\n  \"description\": \"Temporary category\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"adminToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "pm.test('created category generates a slug', function () {",
+                  "    pm.expect(body.data.name).to.eql(pm.collectionVariables.get('categoryName'));",
+                  "    pm.expect(body.data.slug).to.be.a('string').and.not.empty;",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('managedCategoryId', String(body.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": { \"id\": 7, \"name\": \"Postman Category\", \"slug\": \"postman-category\", \"description\": \"Temporary category\" }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create a category with a slug",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories",
+            "description": "Create a category with a slug",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Slug Rejected {{runStamp}}\",\n  \"slug\": \"custom-slug\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"adminToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('client slug is prohibited', function () {",
+                  "    pm.expect(pm.response.json().errors).to.have.property('slug');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Replace a category without a name",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories/{{managedCategoryId}}",
+            "description": "Replace a category without a name",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Missing the name\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"adminToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('put requires the category name', function () {",
+                  "    pm.expect(pm.response.json().errors).to.have.property('name');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Replace a category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories/{{managedCategoryId}}",
+            "description": "Replace a category",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{categoryName}} Updated\",\n  \"description\": \"Replaced\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"adminToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('put updates the category name', function () {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(data.name).to.eql(pm.collectionVariables.get('categoryName') + ' Updated');",
+                  "    pm.expect(data.slug).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update a category",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories/{{managedCategoryId}}",
+            "description": "Update a category",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated description\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"adminToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('patch updates the description', function () {",
+                  "    pm.expect(pm.response.json().data.description).to.eql('Updated description');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create an event in the new category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events",
+            "description": "Create an event in the new category",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman Blocker {{runStamp}}\",\n  \"description\": \"Holds the category so delete conflicts.\",\n  \"category_id\": {{managedCategoryId}},\n  \"venue\": \"Main Hall\",\n  \"event_date\": \"{{futureDate}}\",\n  \"start_time\": \"09:00:00\",\n  \"end_time\": \"11:00:00\",\n  \"maximum_capacity\": 5,\n  \"registration_deadline\": \"{{futureDeadline}}\",\n  \"status\": \"published\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('blockerEventId', String(body.data.id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete a category that still has events",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories/{{managedCategoryId}}",
+            "description": "Delete a category that still has events",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"adminToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('category delete conflict explains the reason', function () {",
+                  "    pm.expect(pm.response.json().message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "409 Conflict",
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"This category cannot be deleted while events still use it.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete the blocking event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{blockerEventId}}",
+            "description": "Delete the blocking event",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete a category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories/{{managedCategoryId}}",
+            "description": "Delete a category",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"adminToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get the deleted category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/categories/{{managedCategoryId}}",
+            "description": "Get the deleted category",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List users as a student",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users",
+            "description": "List users as a student",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"studentToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test('student user list is forbidden', function () {",
+                  "    pm.expect(pm.response.json().message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List users without a token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users",
+            "description": "List users without a token",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users",
+            "description": "Administrator user list.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"adminToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('user list returns profiles with roles', function () {",
+                  "    const rows = pm.response.json().data;",
+                  "    pm.expect(rows).to.be.an('array').that.is.not.empty;",
+                  "    pm.expect(rows[0]).to.have.property('email');",
+                  "    pm.expect(rows[0].role).to.have.property('slug');",
+                  "    pm.expect(rows[0].password).to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get a user",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/{{newUserId}}",
+            "description": "Get a user",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"adminToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('user details match the registered student', function () {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(String(data.id)).to.eql(pm.collectionVariables.get('newUserId'));",
+                  "    pm.expect(data.email).to.eql(pm.collectionVariables.get('newUserEmail'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get a missing user",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/999999999",
+            "description": "Get a missing user",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"adminToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change a user role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/{{newUserId}}/role",
+            "description": "Change a user role",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"organizer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"adminToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('role slug matches the submitted role', function () {",
+                  "    pm.expect(pm.response.json().data.role.slug).to.eql('organizer');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": { \"id\": 1, \"role\": { \"slug\": \"organizer\" } }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Restore the student role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/{{newUserId}}/role",
+            "description": "Restore the student role",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"student\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"adminToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('role is restored to student', function () {",
+                  "    pm.expect(pm.response.json().data.role.slug).to.eql('student');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cleanup",
+      "item": [
+        {
+          "name": "Delete the main event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{eventId}}",
+            "description": "Delete the main event",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete the past event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{pastEventId}}",
+            "description": "Delete the past event",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete the draft event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{draftEventId}}",
+            "description": "Delete the draft event",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete the closed event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{closedEventId}}",
+            "description": "Delete the closed event",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete the one-seat event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{capacityEventId}}",
+            "description": "Delete the one-seat event",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get the deleted event",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/events/{{eventId}}",
+            "description": "Get the deleted event",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/logout",
+            "description": "Logout",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('logout confirms the session ended', function () {",
+                  "    pm.expect(pm.response.json().message).to.eql('Logged out.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Logged out.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Current profile after logout",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/users/me",
+            "description": "The organizer token was revoked by logout.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const saved = pm.collectionVariables.get(\"organizerToken\");",
+                  "if (saved) {",
+                  "    pm.collectionVariables.set(\"token\", saved);",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
